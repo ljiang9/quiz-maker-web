@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>自动出题 quiz-maker-web</title>
+<style>
+body{font-family:system-ui,sans-serif;max-width:760px;margin:24px auto;padding:0 16px}
+.card{border:1px solid #ddd;border-radius:8px;padding:12px;margin:10px 0}
+button{padding:8px 14px;cursor:pointer;margin:4px}
+.opt{display:block;margin:4px 0}
+.good{color:#2e7d32}.bad{color:#c62828}
+</style>
+</head>
+<body>
+<h1>自动出题 quiz-maker-web</h1>
+<p>内置题库，随机抽选择题；答题后判分并解析。无 API Key。</p>
+<div class="card"><button onclick="start(5)">随机出 5 题</button><span id="score"></span></div>
+<div id="quiz"></div>
+<script>
+const BANK=[
+  {q:"中国的首都是？",opts:["上海","北京","广州","西安"],ans:1,explain:"北京是中华人民共和国首都。"},
+  {q:"水的化学式是？",opts:["CO2","H2O","O2","NaCl"],ans:1,explain:"H2O 由两个氢一个氧组成。"},
+  {q:"一年有多少个月？",opts:["10","11","12","13"],ans:2,explain:"公历一年 12 个月。"},
+  {q:"太阳从哪边升起？",opts:["东","西","南","北"],ans:0,explain:"地球自西向东自转，太阳东升。"},
+  {q:"1+1 在十进制下等于？",opts:["1","2","3","11"],ans:1,explain:"十进制 1+1=2。"},
+  {q:"光速约为每秒多少？",opts:["3 千米","30 千米","30 万千米","3 亿千米"],ans:2,explain:"约 30 万 km/s。"},
+  {q:"《红楼梦》作者是？",opts:["罗贯中","曹雪芹","吴承恩","鲁迅"],ans:1,explain:"曹雪芹著《红楼梦》。"},
+  {q:"三角形内角和是？",opts:["90°","180°","270°","360°"],ans:1,explain:"平面三角形内角和 180°。"},
+];
+function pickN(arr,n,r){const idx=arr.map((_,i)=>i);const order=idx.sort((a,b)=>r[a]-r[b]);return order.slice(0,n).map(i=>arr[i]);}
+function grade(q,chosenIdx){return chosenIdx===q.ans;}
+function scoreOf(answers){return answers.filter(a=>a.ok).length;}
+if(typeof module!=='undefined'){module.exports={BANK,pickN,grade,scoreOf};}
+let chosen={};
+function start(n){const r=Array.from({length:BANK.length},()=>Math.random());const qs=pickN(BANK,n,r);chosen={};document.getElementById('score').textContent='';document.getElementById('quiz').innerHTML=qs.map((q,i)=>{const opts=q.opts.map((o,j)=>`<label class="opt"><input type="radio" name="q${i}" onchange="choose(${i},${j})"> ${o}</label>`).join('');return `<div class="card"><b>${i+1}. ${q.q}</b><div>${opts}</div><div id="exp${i}" style="font-size:13px;color:#555"></div></div>`;}).join('')+`<div class="card"><button onclick="submit(${qs.length})">提交判分</button></div>`;window._qs=qs;}
+function choose(i,j){chosen[i]=j;}
+function submit(n){let correct=0;for(let i=0;i<n;i++){const ok=grade(window._qs[i],chosen[i]);if(ok)correct++;document.getElementById('exp'+i).innerHTML=(ok?'<span class="good">✓ 正确</span>':'<span class="bad">✗ 错误</span>')+' '+window._qs[i].explain;}document.getElementById('score').textContent=` 得分：${correct}/${n}`;}
+</script>
+</body>
+</html>
